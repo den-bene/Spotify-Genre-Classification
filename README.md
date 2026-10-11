@@ -2,27 +2,27 @@
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/den-bene/spotify-genre-classification/blob/main/Spotify_10k_Tracks_Project.ipynb)
 
-A university machine-learning project classifying ten musical genres from 13 audio descriptors and musical attributes. The analysis covers exploration, preprocessing, baseline comparison, training cross-validation, Random Forest regularization and final test evaluation. The emphasis is on a consistent evaluation procedure and controlling overfitting, allowing a modest loss of validation performance.
+Classification of ten musical genres using 13 audio features and musical attributes from 10,000 Spotify tracks. The project compares linear models, KNN and Random Forest, with a focus on reducing overfitting through regularization.
 
-**Data:** [Spotify 10000 tracks (genre manually labeled), Adam Wu, Kaggle](https://www.kaggle.com/datasets/adamwu/spotify-10000-tracks-with-genre): 10,000 tracks, 1,000 per genre. Artist names, track names and IDs are excluded as predictors.
+## Dataset
 
-The included `10k_tracks.csv` is attributed to Adam Wu and redistributed unchanged under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/), as listed in the Kaggle dataset metadata. This dataset license requires attribution, noncommercial use and ShareAlike for adaptations. It applies to the dataset; it does not license the notebook code. CSV SHA-256: `be5713694114eab3372228bf925fe412fa676e9af29f54a535fdf80ab2778d80`.
+[Spotify 10000 tracks (genre manually labeled)](https://www.kaggle.com/datasets/adamwu/spotify-10000-tracks-with-genre), by Adam Wu on Kaggle. Each genre contains 1,000 tracks. Track names, artist names and IDs are excluded from the predictors.
+
+The included `10k_tracks.csv` is unchanged and distributed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). The dataset requires attribution and noncommercial use; adaptations must retain the same license. This license applies to the dataset, not the notebook code.
 
 ## Method
 
-Use a stratified 80/20 split with seed 42. Fit imputation, scaling and one-hot encoding inside each training-CV fold. Compare Logistic Regression with and without SVD, LinearSVC, KNN and Random Forest using the same five stratified folds.
+The data are split into 8,000 training tracks and 2,000 test tracks, stratified by genre with seed 42. Model comparison and parameter selection use five-fold cross-validation on the training set. Imputation, scaling and one-hot encoding are fitted separately within each fold.
 
-For Random Forest, select the smallest mean training/validation macro-F1 gap among configurations within **0.04** of the highest mean validation macro-F1. This declared tolerance prioritizes stronger regularization while preserving useful predictive performance; it is a practical rule, not a significance test. Compare the chosen forest with the other classifiers before final evaluation. The test does not determine parameters or model choice.
-
-Selected search scores are development estimates and may be optimistic after hyperparameter selection. Test diagnostics describe the fixed model and do not drive retuning.
+The classifiers are Logistic Regression, Logistic Regression with SVD, LinearSVC, KNN and Random Forest. For Random Forest, the selection rule allows a validation macro-F1 loss of up to 0.04 from the best tested mean, then chooses the smallest training/validation gap. This trades some predictive performance for stronger regularization. The tolerance is a practical choice, not a significance test. Test results are excluded from model selection.
 
 ## Results
 
-Selected model: **Random Forest**, with 300 trees, maximum depth 8, minimum leaf size 8, minimum split size 9 and feature fraction 0.5.
+The selected Random Forest uses 300 trees, maximum depth 8, minimum leaf size 8, minimum split size 9 and a feature fraction of 0.5.
 
-On the 2,000-track test set: accuracy **0.5220**, macro-F1 **0.5145**.
+Test accuracy: **52.20%**. Test macro-F1: **0.5145**.
 
-Training-only five-fold CV:
+Mean scores across the five training-CV folds:
 
 | Model | Validation macro-F1 | Training macro-F1 | Gap |
 | --- | ---: | ---: | ---: |
@@ -32,30 +32,18 @@ Training-only five-fold CV:
 | Logistic Regression + SVD | 0.4855 | 0.4970 | 0.0115 |
 | LinearSVC | 0.4510 | 0.4654 | 0.0143 |
 
-The flexible RF reference gives validation macro-F1 0.5619, training macro-F1 0.9275 and gap 0.3656. The selected forest reduces that gap to 0.0966, with validation macro-F1 0.5288. The highest RF validation mean in the grid is 0.5634; the chosen regularization sacrifices 0.0347 macro-F1 relative to it. The remaining gap is reported rather than treated as eliminated.
+The more flexible RF reference scores 0.9275 on training and 0.5619 on validation, a gap of 0.3656. Regularization reduces the gap to 0.0966. The selected validation score is 0.0347 below the grid's highest mean of 0.5634.
 
-For distance-weighted KNN, predicting its own training observations yields near-perfect training scores by construction; that score requires cautious interpretation.
+Distance-weighted KNN predicts its own training observations almost perfectly by construction. Its training score therefore needs cautious interpretation.
 
 ## Run
 
-**Colab:** use the Open in Colab button above, choose a Python CPU runtime and run all cells. Download `10k_tracks.csv` from this repository and upload it when prompted. Save the executed notebook and download `spotify_results.zip` from the Files sidebar.
+**Colab:** click Open in Colab, use a Python CPU runtime and run all cells. Download `10k_tracks.csv` from this repository and upload it when prompted.
 
-**VS Code:** open this folder, install the Microsoft Python/Jupyter extensions, create a Python 3.11+ virtual environment, install `requirements.txt`, select that environment as the notebook kernel and run all cells. The included CSV can stay in the project root; `data/10k_tracks.csv` is also supported. Detailed Italian steps: [RUN_IT.md](RUN_IT.md).
-
-## Contents
-
-- `Spotify_10k_Tracks_Project.ipynb`: complete analysis with outputs, model comparison, RF search, metrics, confusion matrix, permutation importance and learning/validation curves.
-- `10k_tracks.csv`: attributed dataset, included under CC BY-NC-SA 4.0.
-- `requirements.txt`: compatible dependency ranges for local execution.
-- `RUN_IT.md`: concise Italian instructions for Colab and VS Code.
-- `.gitignore`: excludes generated reports, saved models, archives and local environments.
-
-The notebook generates `reports/`, `models/` and `spotify_results.zip` during execution. They are not required in the repository: outputs are already visible in the notebook. The saved execution used Python 3.13.1, NumPy 2.5.4, pandas 3.0.6, SciPy 1.18.1, scikit-learn 1.9.1, Matplotlib 3.11.2 and joblib 1.6.0.
-
-The notebook executed successfully from a fresh local kernel, including prediction equality after model save/reload. Runtime on this machine was 362 seconds. Colab timing and results may vary with runtime and package versions; the upload path was checked with a simulated Colab upload.
+**Locally:** install the dependencies with `pip install -r requirements.txt`, open the notebook in Jupyter or VS Code and run all cells. Keep the CSV beside the notebook; `data/10k_tracks.csv` is also supported.
 
 ## Limitations
 
-Genre labels are manually curated and summary audio descriptors have limited information. Artist-credit overlap affects 57.55% of test tracks, and 34 exact audio vectors occur on both sides of the split. This protocol describes track classification in this collection, not generalization to unseen artists. The internal test does not replace external validation.
+Genres are manually labeled, and summary audio features cannot capture every distinction between them. In the track split, 57.55% of test tracks share an artist credit with training, and 34 identical audio vectors appear on both sides. The results describe track classification in this collection, not performance on unseen artists.
 
-The results describe the configurations tested here, not a proven maximum for this dataset. Scores from other Spotify collections or different labels, features and splits are not directly comparable.
+Scores used for parameter selection may be optimistic. The internal test does not replace external validation, and the reported results apply to the configurations tested here. Scores from other Spotify datasets or different evaluation protocols are not directly comparable.
